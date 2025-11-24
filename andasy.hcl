@@ -1,8 +1,8 @@
-# andasy.hcl app configuration file generated for tartanvolt on Monday, 24-Nov-25 13:15:23 EST
+# andasy.hcl app configuration file generated for volt on Monday, 24-Nov-25 15:59:16 EST
 #
 # See https://github.com/quarksgroup/andasy-cli for information about how to use this file.
 
-app_name = "tartanvolt"
+app_name = "volt"
 
 app {
 
@@ -17,7 +17,7 @@ app {
   }
 
   process {
-    name = "tartanvolt"
+    name = "volt"
   }
 
 }
