@@ -1,8 +1,46 @@
-FROM nginx:alpine
+# syntax = docker/dockerfile:1
 
-# Serve the built Vite app from /usr/share/nginx/html
-COPY dist/ /usr/share/nginx/html/
+# Adjust NODE_VERSION as desired
+ARG NODE_VERSION=22.20.0
+FROM node:${NODE_VERSION}-slim as base
 
-EXPOSE 80
+LABEL andasy_launch_runtime="NodeJS"
 
-CMD ["nginx", "-g", "daemon off;"]
+# NodeJS app lives here
+WORKDIR /app
+
+# Set production environment
+ENV NODE_ENV=production
+
+
+# Throw-away build stage to reduce size of final image
+FROM base as build
+
+# Install packages needed to build node modules
+RUN apt-get update -qq && \
+    apt-get install -y python-is-python3 pkg-config build-essential 
+
+# Install node modules
+COPY --link package.json package-lock.json .
+RUN npm install --production=false
+
+# Copy application code
+COPY --link . .
+
+# Build application
+RUN npm run build
+
+# Remove development dependencies
+RUN npm prune --production
+
+
+# Final stage for app image
+FROM base
+
+# Copy built application
+COPY --from=build /app /app
+
+EXPOSE 8080
+
+# Start the server by default, this can be overwritten at runtime
+CMD [ "npm", "run", "start" ]
