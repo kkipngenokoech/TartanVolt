@@ -13,7 +13,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Deploy to Andasy
-        uses: quarksgroup/andasy-action@main
+      - name: Install Andasy CLI
+        run: |
+          curl -fsSL https://andasy.io/install.sh | bash
+          echo "$HOME/.andasy/bin" >> $GITHUB_PATH
+
+      - name: Andasy version
+        run: andasy --version
+
+      - name: Deploy to Andasy (CLI)
         env:
           ANDASY_ACCESS_TOKEN: ${{ secrets.ANDASY_ACCESS_TOKEN }}
+        run: |
+          # deploy the repository root to the 'tartanvolt' app
+          andasy deploy -a tartanvolt
