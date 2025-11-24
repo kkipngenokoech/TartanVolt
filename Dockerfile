@@ -1,7 +1,7 @@
 FROM nginx:alpine
 
-# Copy single HTML page as the site index
-COPY tartanvolt.html /usr/share/nginx/html/index.html
+# Serve the built Vite app from /usr/share/nginx/html
+COPY dist/ /usr/share/nginx/html/
 
 EXPOSE 80
 
