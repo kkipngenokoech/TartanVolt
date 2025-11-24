@@ -1,22 +1,32 @@
-name: Deployment to Andasy
+name: Build and Deploy to Andasy
 
 on:
   push:
     branches: [main]
 
-# grant the workflow the permissions needed to push packages (GHCR)
 permissions:
   contents: read
   packages: write
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     env:
       ANDASY_ACCESS_TOKEN: ${{ secrets.ANDASY_ACCESS_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build site
+        run: npm run build
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -25,7 +35,6 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          # use a PAT with package write privileges stored in the repo secrets
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PAT }}
 
@@ -34,7 +43,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: "ghcr.io/${{ github.repository_owner }}/tartanvolt:latest"
+          tags: "ghcr.io/${{ github.repository_owner }}/tartanvolt:${{ github.sha }}"
 
       - name: Install Andasy CLI
         run: |
@@ -44,12 +53,10 @@ jobs:
       - name: Andasy version
         run: andasy version
 
-      - name: Andasy list apps (json)
-        run: andasy apps list -j || true
-
-
       - name: Deploy image to Andasy
+        env:
+          ANDASY_ACCESS_TOKEN: ${{ secrets.ANDASY_ACCESS_TOKEN }}
         run: |
-          IMAGE="ghcr.io/${{ github.repository_owner }}/tartanvolt:latest"
-          echo "Deploying $IMAGE"
+          IMAGE=ghcr.io/${{ github.repository_owner }}/tartanvolt:${{ github.sha }}
+          echo "Deploying image: $IMAGE"
           andasy deploy -a tartanvolt -i $IMAGE
