@@ -22,17 +22,15 @@ jobs:
         run: andasy version
 
       - name: Debug: list orgs and apps
-        env:
-          ANDASY_ACCESS_TOKEN: ${{ secrets.ANDASY_ACCESS_TOKEN }}
         run: |
           echo "--- andasy status ---"
-          andasy status || true
+          ANDASY_ACCESS_TOKEN=${{ secrets.ANDASY_ACCESS_TOKEN }} andasy status || true
           echo "--- orgs ---"
-          andasy orgs list || true
+          ANDASY_ACCESS_TOKEN=${{ secrets.ANDASY_ACCESS_TOKEN }} andasy orgs list || true
           echo "--- apps (table) ---"
-          andasy apps list || true
+          ANDASY_ACCESS_TOKEN=${{ secrets.ANDASY_ACCESS_TOKEN }} andasy apps list || true
           echo "--- apps (json) ---"
-          andasy apps list -j || true
+          ANDASY_ACCESS_TOKEN=${{ secrets.ANDASY_ACCESS_TOKEN }} andasy apps list -j || true
 
       - name: Deploy to Andasy (CLI)
         env:
