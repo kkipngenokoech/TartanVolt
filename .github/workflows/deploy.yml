@@ -19,7 +19,7 @@ jobs:
           echo "$HOME/.andasy/bin" >> $GITHUB_PATH
 
       - name: Andasy version
-        run: andasy --version
+        run: andasy version
 
       - name: Deploy to Andasy (CLI)
         env:
