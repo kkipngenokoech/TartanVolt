@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tartan Volt - Fast Battery Diagnostics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0e27;
+            color: #e0e6ed;
+            overflow-x: hidden;
+        }
+
+        /* Animated gradient background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at top, #1a2332 0%, #0a0e27 50%);
+            z-index: -1;
+        }
+
+        .bg-gradient::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(0, 247, 255, 0.03) 0%, transparent 50%);
+            animation: rotate 30s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 5%;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(0, 247, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00f7ff 0%, #0099ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: #e0e6ed;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #00f7ff;
+            transition: width 0.3s;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 180px 5% 100px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #ffffff 0%, #00f7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: #a0aec0;
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, #00f7ff 0%, #0099ff 100%);
+            color: #0a0e27;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+            box-shadow: 0 0 30px rgba(0, 247, 255, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(0, 247, 255, 0.5);
+        }
+
+        /* Stats Dashboard */
+        .stats-section {
+            padding: 80px 5%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .stat-card {
+            background: rgba(26, 35, 50, 0.6);
+            border: 1px solid rgba(0, 247, 255, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #00f7ff 0%, #0099ff 100%);
+            transform: scaleX(0);
+            transition: transform 0.5s;
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 247, 255, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 247, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00f7ff 0%, #0099ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #a0aec0;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .stat-sublabel {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Product Section */
+        .product-section {
+            padding: 100px 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 0%, #00f7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #a0aec0;
+            margin-bottom: 4rem;
+            font-size: 1.1rem;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .product-card {
+            background: rgba(26, 35, 50, 0.6);
+            border: 1px solid rgba(0, 247, 255, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 247, 255, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 247, 255, 0.2);
+        }
+
+        .product-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #00f7ff;
+            margin-bottom: 1rem;
+        }
+
+        .product-spec {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(0, 247, 255, 0.1);
+        }
+
+        .product-spec:last-child {
+            border-bottom: none;
+        }
+
+        .spec-label {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        .spec-value {
+            color: #e0e6ed;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Technology Section */
+        .tech-section {
+            padding: 100px 5%;
+            background: rgba(0, 247, 255, 0.02);
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            align-items: center;
+        }
+
+        .tech-content h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #00f7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tech-content p {
+            color: #a0aec0;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .tech-features {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(26, 35, 50, 0.4);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 247, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .feature-item:hover {
+            border-color: rgba(0, 247, 255, 0.4);
+            transform: translateX(10px);
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #00f7ff 0%, #0099ff 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #0a0e27;
+        }
+
+        .feature-text {
+            flex: 1;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #e0e6ed;
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-desc {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .tech-visual {
+            position: relative;
+        }
+
+        .data-viz {
+            background: rgba(26, 35, 50, 0.6);
+            border: 1px solid rgba(0, 247, 255, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .viz-title {
+            color: #00f7ff;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .progress-bar {
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 247, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00f7ff 0%, #0099ff 100%);
+            border-radius: 4px;
+            transition: width 1s ease-out;
+            box-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 100px 5%;
+            text-align: center;
+        }
+
+        .cta-box {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(26, 35, 50, 0.6);
+            border: 1px solid rgba(0, 247, 255, 0.2);
+            border-radius: 16px;
+            padding: 4rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .cta-box h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 0%, #00f7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .cta-box p {
+            color: #a0aec0;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 5%;
+            border-top: 1px solid rgba(0, 247, 255, 0.1);
+            text-align: center;
+            color: #64748b;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .tech-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            nav {
+                gap: 1rem;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+
+            .cta-box {
+                padding: 2rem;
+            }
+        }
+
+        /* Pulse animation for live indicators */
+        .live-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #00f7ff;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(0, 247, 255, 0.7);
+            }
+            50% {
+                opacity: 0.7;
+                box-shadow: 0 0 0 10px rgba(0, 247, 255, 0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+
+    <header>
+        <div class="logo">Tartan Volt</div>
+        <nav>
+            <a href="#technology">Technology</a>
+            <a href="#products">Products</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>Test Batteries in Minutes,<br>Not Hours</h1>
+        <p>Revolutionary EIS technology delivers 98% accurate battery diagnostics 60x faster than traditional methods</p>
+        <a href="#contact" class="cta-button">Get Started</a>
+    </section>
+
+    <section class="stats-section">
+        <div class="stat-card">
+            <div class="stat-number">98%</div>
+            <div class="stat-label">Estimation Accuracy</div>
+            <div class="stat-sublabel">Benchmarked against 6hr cycling test</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">60x</div>
+            <div class="stat-label">Faster Testing</div>
+            <div class="stat-sublabel">5 minutes vs 6+ hours</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">100</div>
+            <div class="stat-label">Batteries per Week</div>
+            <div class="stat-sublabel">With just one device</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">2 MWh</div>
+            <div class="stat-label">Energy Recovered</div>
+            <div class="stat-sublabel">From 1600+ modules tested</div>
+        </div>
+    </section>
+
+    <section class="product-section" id="products">
+        <h2 class="section-title">BattScan Product Line</h2>
+        <p class="section-subtitle">Advanced battery diagnostics for every voltage range</p>
+        
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-name">BattScan050M</div>
+                <div class="product-spec">
+                    <span class="spec-label">Voltage Range</span>
+                    <span class="spec-value">5-50V</span>
+                </div>
+                <div class="product-spec">
+                    <span class="spec-label">Application</span>
+                    <span class="spec-value">Module Level</span>
+                </div>
+                <div class="product-spec">
+                    <span class="spec-label">EIS Current</span>
+                    <span class="spec-value">10A, 0.08Hz-1kHz</span>
+                </div>
+                <div class="product-spec">
+                    <span class="spec-label">Status</span>
+                    <span class="spec-value">✓ Available</span>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-name">BattScan450P</div>
+                <div class="product-spec">
+                    <span class="spec-label">Voltage Range</span>
+                    <span class="spec-value">95-400V</span>
+                </div>
+                <div class="product-spec">
+                    <span class="spec-label">Application</span>
+                    <span class="spec-value">Pack Level</span>
+                </div>
+                <div class="product-spec">
+                    <span class="spec-label">EIS Current</span>
+                    <span class="spec-value">10A, 0.08Hz-1kHz</span>
+                </div>
+                <div class="product-spec">
+                    <span class="spec-label">Status</span>
+                    <span class="spec-value">Prototype</span>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-name">BattScan500V</div>
+                <div class="product-spec">
+                    <span class="spec-label">Voltage Range</span>
+                    <span class="spec-value">95-500V</span>
+                </div>
+                <div class="product-spec">
+                    <span class="spec-label">Application</span>
+                    <span class="spec-value">In-Vehicle</span>
+                </div>
+                <div class="product-spec">
+                    <span class="spec-label">Interface</span>
+                    <span class="spec-value">CCS Combo, NACS</span>
+                </div>
+                <div class="product-spec">
+                    <span class="spec-label">Status</span>
+                    <span class="spec-value">Prototype</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="tech-section" id="technology">
+        <div class="tech-grid">
+            <div class="tech-content">
+                <h2>Electrochemical Impedance Spectroscopy</h2>
+                <p>Our patented EIS technology enables advanced battery diagnostics on high voltage battery systems, providing rapid insights into materials degradation and capacity fade.</p>
+                
+                <div class="tech-features">
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-text">
+                            <div class="feature-title">Non-Invasive Testing</div>
+                            <div class="feature-desc">Fast, reliable diagnostics without damaging cells</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-text">
+                            <div class="feature-title">ML-Powered Analysis</div>
+                            <div class="feature-desc">Advanced algorithms for accurate SOH estimation</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">☁️</div>
+                        <div class="feature-text">
+                            <div class="feature-title">Cloud Integration</div>
+                            <div class="feature-desc">BatteryDB tracks all tests and devices in real-time</div>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔄</div>
+                        <div class="feature-text">
+                            <div class="feature-title">Circular Economy</div>
+                            <div class="feature-desc">Enable battery reuse and second-life applications</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tech-visual">
+                <div class="data-viz">
+                    <div class="viz-title"><span class="live-indicator"></span>Live Battery Diagnostics</div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-label">
+                            <span>Capacity Estimation</span>
+                            <span>98%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: 0%" data-target="98"></div>
+                        </div>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress-label">
+                            <span>Testing Speed vs Cycling</span>
+                            <span>60x</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: 0%" data-target="95"></div>
+                        </div>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress-label">
+                            <span>State of Health (SOH)</span>
+                            <span>83%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: 0%" data-target="83"></div>
+                        </div>
+                    </div>
+
+                    <div class="progress-bar">
+                        <div class="progress-label">
+                            <span>Test Time Reduction</span>
+                            <span>-92%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" style="width: 0%" data-target="92"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section" id="contact">
+        <div class="cta-box">
+            <h2>Ready to Transform Your Battery Testing?</h2>
+            <p>Join the circular economy revolution. Contact us to learn how Tartan Volt can accelerate your battery grading process.</p>
+            <a href="mailto:info@tartanvolt.com" class="cta-button">Contact Us</a>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2025 Tartan Volt Inc. | Kigali, Rwanda | info@tartanvolt.com</p>
+        <p>Maximizing the Value of EV Batteries</p>
+    </footer>
+
+    <script>
+        // Animate progress bars on scroll
+        const observerOptions = {
+            threshold: 0.5
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const fills = entry.target.querySelectorAll('.progress-fill');
+                    fills.forEach(fill => {
+                        const target = fill.getAttribute('data-target');
+                        setTimeout(() => {
+                            fill.style.width = target + '%';
+                        }, 200);
+                    });
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        const dataViz = document.querySelector('.data-viz');
+        if (dataViz) observer.observe(dataViz);
+
+        // Smooth scroll for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
